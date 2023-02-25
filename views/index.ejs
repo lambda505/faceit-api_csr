@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Faceit Stats</title>
+    <meta charset="utf-8">
+    <title>Faceit Stats Lookup</title>
   </head>
   <body>
-    <form action="/faceit" method="get">
-      <label for="username">Enter Faceit username:</label>
-      <input type="text" name="username" id="username">
+    <h1>Faceit Stats Lookup</h1>
+    <form action="/stats" method="GET">
+      <label for="username">Enter your Faceit username:</label>
+      <input type="text" name="username" required>
       <button type="submit">Get Stats</button>
     </form>
   </body>

@@ -6,57 +6,66 @@ const fs = require('fs');
 const app = express();
 app.set('view engine', 'ejs');
 app.set("views", "./views/")
+
 app.use(express.static(__dirname + '/public'));
+app.use(express.urlencoded({ extended: true }));
 
 const token = fs.readFile('token.txt', 'utf8', (err, data) => {
     if (err) {
       console.error(err);
       return;
     }
-    console.log(data);
+    console.log("Key found");
   });
 
 
-app.get('/', (req, res) => {
-  res.render('index');
-});
+  const BASE_URL = 'https://open.faceit.com/data/v4/';
 
-app.get('/faceit/:username', (req, res) => {
-    const options = {
-        url: `https://open.faceit.com/data/v4/players?nickname=${req.params.username}`,
-        headers: {'Authorization': token}
-    };
+  const API_HEADERS = {
+    'Authorization': token,
+    'Accept': 'application/json'
+  };
 
-request(options, (error, response, body) => {
-    if (!error && response.statusCode == 200) {
-        const data = JSON.parse(body);
-        const player_id = data.player_id;
-
-        const options = {
-                url: `https://open.faceit.com/data/v4/players/${player_id}/stats/csgo`,
-                headers: { 'Authorization': token }
-        };
-
-        request(options, (error, response, body) => {
-            if (!error && response.statusCode == 200) {
-                const data = JSON.parse(body);
-                res.json({
-                    win_rate: data.lifetime.win_rate,
-                    matches: data.lifetime.m1,
-                });
-            } else {
-                res.status(response.statusCode).send(error);
-            }
+  app.get('/', (req, res) => {
+    res.render('index');
+  });
+  
+  app.get('/stats', (req, res) => {
+    const username = req.query.username;
+  
+    const getMatchesPlayed = request.get({
+      url: `${BASE_URL}players?nickname=${username}`,
+      headers: API_HEADERS
+    }, (error, response, body) => {
+      if (!error && response.statusCode === 200) {
+        const playerData = JSON.parse(body);
+        const playerId = playerData.player_id;
+        const statsUrl = `${BASE_URL}players/${playerId}/stats/csgo`;
+  
+        const getStats = request.get({
+          url: statsUrl,
+          headers: API_HEADERS
+        }, (error, response, body) => {
+          if (!error && response.statusCode === 200) {
+            const statsData = JSON.parse(body);
+            const stats = statsData.segments[0].stats;
+            const matchesPlayed = stats.matches;
+            const matchesWon = stats.wins;
+            const winrate = (matchesWon / matchesPlayed) * 100;
+  
+            res.render('stats', { username, stats, winrate });
+          } else {
+            res.status(404).send('Could not get stats');
+          }
         });
-    } else {
-        res.status(response.statusCode).send(error);
-    }
+      } else {
+        res.status(404).send('Could not find user');
+      }
+    });
   });
-});
+  
+  const PORT = process.env.PORT || 3000;
 
-
-const port = process.env.PORT || 3000;
-
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
+  });

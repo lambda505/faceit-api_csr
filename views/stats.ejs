@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Faceit Stats for <%= username %></title>
+  </head>
+  <body>
+    <h1>Faceit Stats for <%= username %></h1>
+    <ul>
+      <li>Matches Played: <%= stats.matches %></li>
+      <li>Matches Won: <%= stats.wins %></li>
+      <li>Winrate: <%= winrate.toFixed(2) %>%</li>
+    </ul>
+  </body>
+</html>
