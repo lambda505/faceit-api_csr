@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>FACEIT / <%= username %></title>
     <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   </head>
   <body>
 
@@ -42,18 +43,145 @@
       <tr><td>Avg Assists / Match</td><td><%= computed.avgAssists %></td></tr>
     </table>
 
-    <% if (segments && segments.length > 0) { %>
-      <h2>PER MAP</h2>
-      <% segments.forEach(function(seg) { %>
-        <h2><%= seg.label %></h2>
-        <table>
-          <% Object.keys(seg.stats).forEach(function(key) { %>
-            <tr><td><%= key %></td><td><%= seg.stats[key] %></td></tr>
-          <% }); %>
-        </table>
+    <% if (history && history.length > 0) { %>
+    <h2>RECENT RESULTS (LAST <%= history.length %> MATCHES)</h2>
+    <div class="results-strip">
+      <% history.slice().reverse().forEach(function(m) { %>
+        <span class="result-dot <%= m.result === 1 ? 'win' : 'loss' %>"><%= m.result === 1 ? 'W' : 'L' %></span>
       <% }); %>
+    </div>
+
+    <% const eloHistory = history.filter(m => m.elo !== null); %>
+    <% if (eloHistory.length > 1) { %>
+    <h2>ELO PROGRESSION</h2>
+    <div class="chart-wrap"><canvas id="chartElo"></canvas></div>
+    <% } %>
+    <% } %>
+
+    <% if (segments && segments.length > 0) { %>
+    <h2>MATCHES PLAYED PER MAP</h2>
+    <div class="chart-wrap"><canvas id="chartMatches"></canvas></div>
+
+    <h2>K/D RATIO PER MAP</h2>
+    <div class="chart-wrap"><canvas id="chartKD"></canvas></div>
+
+    <h2>WIN RATE PER MAP</h2>
+    <div class="chart-wrap"><canvas id="chartWinRate"></canvas></div>
+
+    <h2>AVG KILLS / DEATHS / ASSISTS PER MAP</h2>
+    <div class="chart-wrap"><canvas id="chartKDA"></canvas></div>
+
+    <h2>PER MAP — FULL STATS</h2>
+    <% segments.forEach(function(seg) { %>
+      <h2><%= seg.label %></h2>
+      <table>
+        <% Object.keys(seg.stats).forEach(function(key) { %>
+          <tr><td><%= key %></td><td><%= seg.stats[key] %></td></tr>
+        <% }); %>
+      </table>
+    <% }); %>
     <% } %>
 
     <a class="back" href="/">&lt; back</a>
+
+    <script>
+      const CHART_DEFAULTS = {
+        font: { family: 'monospace', size: 11 },
+        color: '#000',
+      };
+      Chart.defaults.font.family = 'monospace';
+      Chart.defaults.font.size = 11;
+      Chart.defaults.color = '#000';
+
+      const segments = <%- JSON.stringify(segments) %>;
+      const history  = <%- JSON.stringify(history) %>;
+
+      const mapLabels   = segments.map(s => s.label);
+      const mapMatches  = segments.map(s => parseInt(s.stats['Matches']) || 0);
+      const mapKD       = segments.map(s => parseFloat(s.stats['Average K/D Ratio']) || 0);
+      const mapWinRate  = segments.map(s => parseFloat(s.stats['Win Rate %']) || 0);
+      const mapAvgKills = segments.map(s => parseFloat(s.stats['Average Kills']) || 0);
+      const mapAvgDeaths= segments.map(s => parseFloat(s.stats['Average Deaths']) || 0);
+      const mapAvgAssists=segments.map(s => parseFloat(s.stats['Average Assists']) || 0);
+
+      const barOpts = (title) => ({
+        indexAxis: 'y',
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: false }
+        },
+        scales: {
+          x: { grid: { color: '#eee' }, ticks: { font: { family: 'monospace', size: 11 } } },
+          y: { grid: { display: false }, ticks: { font: { family: 'monospace', size: 11 } } }
+        }
+      });
+
+      new Chart(document.getElementById('chartMatches'), {
+        type: 'bar',
+        data: { labels: mapLabels, datasets: [{ data: mapMatches, backgroundColor: '#000', borderWidth: 0 }] },
+        options: barOpts()
+      });
+
+      new Chart(document.getElementById('chartKD'), {
+        type: 'bar',
+        data: { labels: mapLabels, datasets: [{ data: mapKD, backgroundColor: '#000', borderWidth: 0 }] },
+        options: barOpts()
+      });
+
+      new Chart(document.getElementById('chartWinRate'), {
+        type: 'bar',
+        data: { labels: mapLabels, datasets: [{ data: mapWinRate, backgroundColor: '#000', borderWidth: 0 }] },
+        options: { ...barOpts(), scales: { ...barOpts().scales, x: { ...barOpts().scales.x, max: 100 } } }
+      });
+
+      new Chart(document.getElementById('chartKDA'), {
+        type: 'bar',
+        data: {
+          labels: mapLabels,
+          datasets: [
+            { label: 'Avg Kills',   data: mapAvgKills,   backgroundColor: '#000' },
+            { label: 'Avg Deaths',  data: mapAvgDeaths,  backgroundColor: '#888' },
+            { label: 'Avg Assists', data: mapAvgAssists, backgroundColor: '#ccc' }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'monospace', size: 11 }, boxWidth: 12 } } },
+          scales: {
+            x: { grid: { color: '#eee' }, ticks: { font: { family: 'monospace', size: 11 } } },
+            y: { grid: { display: false }, ticks: { font: { family: 'monospace', size: 11 } } }
+          }
+        }
+      });
+
+      const eloHistory = history.filter(m => m.elo !== null);
+      if (eloHistory.length > 1) {
+        new Chart(document.getElementById('chartElo'), {
+          type: 'line',
+          data: {
+            labels: eloHistory.map(m => m.date),
+            datasets: [{
+              data: eloHistory.map(m => m.elo),
+              borderColor: '#000',
+              borderWidth: 1.5,
+              pointRadius: 2,
+              pointBackgroundColor: '#000',
+              backgroundColor: 'transparent',
+              tension: 0.2
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: '#eee' }, ticks: { font: { family: 'monospace', size: 10 }, maxTicksLimit: 10 } },
+              y: { grid: { color: '#eee' }, ticks: { font: { family: 'monospace', size: 11 } } }
+            }
+          }
+        });
+      }
+    </script>
   </body>
 </html>
