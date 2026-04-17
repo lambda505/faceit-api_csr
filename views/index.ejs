@@ -8,9 +8,11 @@
   <body>
     <h1>FACEIT STATS LOOKUP</h1>
     <form action="/stats" method="GET">
-      <label>ENTER FACEIT USERNAME:</label>
-      <input type="text" name="username" required autocomplete="off">
+      <label>FACEIT USERNAME OR STEAM ID:</label>
+      <input type="text" name="username" required autocomplete="off" placeholder="nickname / 76561198... / STEAM_0:1:... / [U:1:...]"
+        style="width:420px">
       <button type="submit">SEARCH</button>
     </form>
+    <div class="hint">Accepts FACEIT nickname, SteamID64, SteamID2 (STEAM_0:Y:Z), or SteamID3 ([U:1:W])</div>
   </body>
 </html>

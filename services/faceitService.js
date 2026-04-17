@@ -15,6 +15,10 @@ function getPlayer(nickname) {
   return apiFetch(`players?nickname=${encodeURIComponent(nickname)}`);
 }
 
+function getPlayerBySteamId(steamId64) {
+  return apiFetch(`players?game=cs2&game_player_id=${steamId64}`);
+}
+
 function getPlayerStats(playerId) {
   return apiFetch(`players/${playerId}/stats/cs2`);
 }
@@ -23,4 +27,4 @@ function getMatchHistory(playerId, limit = 30) {
   return apiFetch(`players/${playerId}/history?game=cs2&limit=${limit}`);
 }
 
-module.exports = { getPlayer, getPlayerStats, getMatchHistory };
+module.exports = { getPlayer, getPlayerBySteamId, getPlayerStats, getMatchHistory };

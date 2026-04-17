@@ -12,8 +12,8 @@
 
     <div class="meta">LEVEL: <%= profile.level %> &nbsp;|&nbsp; ELO: <%= profile.elo %></div>
     <div class="meta">COUNTRY: <%= profile.country.toUpperCase() %> &nbsp;|&nbsp; REGION: <%= profile.region %></div>
-    <% if (profile.steamId) { %><div class="meta">STEAM: <%= profile.steamId %></div><% } %>
-    <% if (profile.faceitUrl) { %><div class="meta">URL: <a href="<%= profile.faceitUrl %>" target="_blank"><%= profile.faceitUrl %></a></div><% } %>
+    <% if (profile.steamId) { %><div class="meta">STEAM: <a href="https://steamcommunity.com/profiles/<%= profile.steamId %>" target="_blank"><%= profile.steamId %></a></div><% } %>
+    <% if (profile.faceitUrl) { %><div class="meta">FACEIT: <a href="<%= profile.faceitUrl %>" target="_blank"><%= profile.faceitUrl %></a></div><% } %>
 
     <h2>LIFETIME</h2>
     <table>

@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const faceit = require('../services/faceitService');
 const { computeStats, parseHistory, buildProfile } = require('../utils/statsHelper');
+const { toSteamId64 } = require('../utils/steamHelper');
 
 const router = Router();
 
@@ -8,8 +9,13 @@ router.get('/', async (req, res) => {
   const { username } = req.query;
 
   try {
-    const playerData = await faceit.getPlayer(username);
+    const steamId64  = toSteamId64(username);
+    const playerData = steamId64
+      ? await faceit.getPlayerBySteamId(steamId64)
+      : await faceit.getPlayer(username);
+
     const playerId   = playerData.player_id;
+    const displayName = playerData.nickname;
 
     // Fetch stats and match history in parallel
     const [statsData, histData] = await Promise.all([
@@ -27,7 +33,7 @@ router.get('/', async (req, res) => {
     const computed = computeStats(segments);
     const history  = parseHistory(histData.items || [], playerId);
 
-    res.render('stats', { username, stats, winrate, segments, profile, computed, history });
+    res.render('stats', { username: displayName, stats, winrate, segments, profile, computed, history });
   } catch (err) {
     if (err.status === 404) {
       res.status(404).send('Player not found');

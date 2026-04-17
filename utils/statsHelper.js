@@ -1,3 +1,5 @@
+const { toSteamId64 } = require('./steamHelper');
+
 function computeStats(segments) {
   const sumInt = (key) =>
     segments.reduce((acc, seg) => acc + (parseInt(seg.stats[key]) || 0), 0);
@@ -46,7 +48,13 @@ function buildProfile(playerData) {
     level:     cs2Data.skill_level  || 'N/A',
     elo:       cs2Data.faceit_elo   || 'N/A',
     region:    cs2Data.region       || 'N/A',
-    steamId:   playerData.platforms && playerData.platforms.steam ? playerData.platforms.steam : '',
+    steamId: (() => {
+      const raw = playerData.platforms && playerData.platforms.steam ? playerData.platforms.steam : '';
+      if (!raw) return '';
+      const stripped = raw.replace(/^steam_/i, '');
+      // Try direct parse (handles SteamID64, full SteamID2, SteamID3)
+      return toSteamId64(stripped) || toSteamId64(`STEAM_${stripped}`) || stripped;
+    })(),
   };
 }
 
