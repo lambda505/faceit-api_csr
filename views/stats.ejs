@@ -2,14 +2,58 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Faceit Stats for <%= username %></title>
+    <title>FACEIT / <%= username %></title>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
-    <h1>Faceit Stats for <%= username %></h1>
-    <ul>
-      <li>Matches Played: <%= stats.matches %></li>
-      <li>Matches Won: <%= stats.wins %></li>
-      <li>Winrate: <%= winrate.toFixed(2) %>%</li>
-    </ul>
+
+    <h1>FACEIT / <%= username %></h1>
+
+    <div class="meta">LEVEL: <%= profile.level %> &nbsp;|&nbsp; ELO: <%= profile.elo %></div>
+    <div class="meta">COUNTRY: <%= profile.country.toUpperCase() %> &nbsp;|&nbsp; REGION: <%= profile.region %></div>
+    <% if (profile.steamId) { %><div class="meta">STEAM: <%= profile.steamId %></div><% } %>
+    <% if (profile.faceitUrl) { %><div class="meta">URL: <a href="<%= profile.faceitUrl %>" target="_blank"><%= profile.faceitUrl %></a></div><% } %>
+
+    <h2>LIFETIME</h2>
+    <table>
+      <tr><td>Matches</td><td><%= stats['Matches'] %></td></tr>
+      <tr><td>Wins</td><td><%= stats['Wins'] %></td></tr>
+      <tr><td>Win Rate</td><td><%= stats['Win Rate %'] %>%</td></tr>
+      <tr><td>Avg K/D Ratio</td><td><%= stats['Average K/D Ratio'] %></td></tr>
+      <tr><td>Avg Headshots %</td><td><%= stats['Average Headshots %'] %>%</td></tr>
+      <tr><td>Longest Win Streak</td><td><%= stats['Longest Win Streak'] %></td></tr>
+      <tr><td>Current Win Streak</td><td><%= stats['Current Win Streak'] %></td></tr>
+    </table>
+
+    <h2>LIFETIME (COMPUTED FROM MAPS)</h2>
+    <table>
+      <tr><td>K/D Ratio</td><td><%= computed.kd %></td></tr>
+      <tr><td>Headshots %</td><td><%= computed.hsPercent %>%</td></tr>
+      <tr><td>Total Kills</td><td><%= computed.totalKills %></td></tr>
+      <tr><td>Total Deaths</td><td><%= computed.totalDeaths %></td></tr>
+      <tr><td>Total Assists</td><td><%= computed.totalAssists %></td></tr>
+      <tr><td>Total Headshots</td><td><%= computed.totalHeadshots %></td></tr>
+      <tr><td>Total MVPs</td><td><%= computed.totalMVPs %></td></tr>
+      <tr><td>Total Triple Kills</td><td><%= computed.totalTriple %></td></tr>
+      <tr><td>Total Quadro Kills</td><td><%= computed.totalQuadro %></td></tr>
+      <tr><td>Total Penta Kills</td><td><%= computed.totalPenta %></td></tr>
+      <tr><td>Avg Kills / Match</td><td><%= computed.avgKills %></td></tr>
+      <tr><td>Avg Deaths / Match</td><td><%= computed.avgDeaths %></td></tr>
+      <tr><td>Avg Assists / Match</td><td><%= computed.avgAssists %></td></tr>
+    </table>
+
+    <% if (segments && segments.length > 0) { %>
+      <h2>PER MAP</h2>
+      <% segments.forEach(function(seg) { %>
+        <h2><%= seg.label %></h2>
+        <table>
+          <% Object.keys(seg.stats).forEach(function(key) { %>
+            <tr><td><%= key %></td><td><%= seg.stats[key] %></td></tr>
+          <% }); %>
+        </table>
+      <% }); %>
+    <% } %>
+
+    <a class="back" href="/">&lt; back</a>
   </body>
 </html>
